@@ -393,7 +393,10 @@ def test_run_monitor_is_private_and_deduplicates(
     assert "example.com" not in capsys.readouterr().out
 
 
-def test_async_main_returns_failure_without_details(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_async_main_returns_failure_without_details(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     notified = False
 
     async def fail() -> int:
@@ -407,3 +410,4 @@ def test_async_main_returns_failure_without_details(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(monitor_module, "_notify_monitor_failure", notify)
     assert asyncio.run(async_main()) == 2
     assert notified
+    assert "private detail" in capsys.readouterr().err

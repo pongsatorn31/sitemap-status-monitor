@@ -644,8 +644,16 @@ async def async_main() -> int:
     """CLI entry point with a best-effort private failure alert."""
     try:
         return await run_monitor()
-    except (MonitorError, httpx.HTTPError, OSError, ValueError):
-        print("Monitor failed; target details were not written to this log", file=sys.stderr)
+    except (MonitorError, httpx.HTTPError, OSError, ValueError) as exc:
+        if isinstance(exc, MonitorError):
+            safe_reason = str(exc)
+        elif isinstance(exc, httpx.HTTPError):
+            safe_reason = "network request failed"
+        elif isinstance(exc, OSError):
+            safe_reason = "local state I/O failed"
+        else:
+            safe_reason = "numeric configuration is invalid"
+        print(f"Monitor failed: {safe_reason}", file=sys.stderr)
         await _notify_monitor_failure()
         return 2
 
