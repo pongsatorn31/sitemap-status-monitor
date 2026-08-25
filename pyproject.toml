@@ -1,0 +1,44 @@
+[project]
+name = "sitemap-status-monitor"
+version = "2.0.0"
+description = "Privacy-conscious, low-impact sitemap status monitoring"
+requires-python = ">=3.12"
+dependencies = [
+    "defusedxml==0.7.1",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy==1.17.0",
+    "pytest==9.0.2",
+    "pytest-cov==7.0.0",
+    "ruff==0.12.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+branch = true
+source = ["monitor"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["defusedxml", "defusedxml.*"]
+ignore_missing_imports = true
