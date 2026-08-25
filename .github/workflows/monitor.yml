@@ -8,8 +8,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: sitemap-status-check
+  cancel-in-progress: false
+
 jobs:
-  validate-trigger:
+  monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+
     steps:
-      - run: echo "Workflow trigger is valid"
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install locked dependencies
+        run: python -m pip install --require-hashes --only-binary=:all: -r requirements.txt
+
+      - name: Check sitemap URLs
+        env:
+          SITEMAP_URL: ${{ secrets.SITEMAP_URL }}
+          ALLOWED_DOMAIN: ${{ secrets.ALLOWED_DOMAIN }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          STATE_HMAC_KEY: ${{ secrets.STATE_HMAC_KEY }}
+          MONITOR_CONCURRENCY: "4"
+          MONITOR_REQUESTS_PER_SECOND: "2.25"
+        run: python monitor.py
