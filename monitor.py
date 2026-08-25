@@ -117,25 +117,32 @@ class PublicHostGuard:
 
     def allows_name(self, url: str) -> bool:
         """Return whether a URL has the required scheme, host, and port."""
+        return self._name_rejection_reason(url) is None
+
+    def _name_rejection_reason(self, url: str) -> str | None:
         try:
             parsed = urlparse(url)
             host = (parsed.hostname or "").encode("idna").decode("ascii").lower().rstrip(".")
             port = parsed.port
         except (UnicodeError, ValueError):
-            return False
-        return (
-            parsed.scheme == "https"
-            and parsed.username is None
-            and parsed.password is None
-            and port in {None, 443}
-            and bool(host)
-            and (host == self._domain or host.endswith(f".{self._domain}"))
-        )
+            return "URL syntax could not be parsed"
+        if parsed.scheme != "https":
+            return "URL scheme is not HTTPS"
+        if parsed.username is not None or parsed.password is not None:
+            return "URL contains credentials"
+        if port not in {None, 443}:
+            return "URL port is not 443"
+        if not host:
+            return "URL hostname is missing"
+        if host != self._domain and not host.endswith(f".{self._domain}"):
+            return "URL hostname does not match the allowed domain"
+        return None
 
     async def validate(self, url: str) -> None:
         """Reject unsafe URL syntax and hosts resolving to non-public addresses."""
-        if not self.allows_name(url):
-            raise UnsafeUrlError("URL must use same-domain HTTPS on port 443")
+        rejection_reason = self._name_rejection_reason(url)
+        if rejection_reason:
+            raise UnsafeUrlError(rejection_reason)
         host = (urlparse(url).hostname or "").lower().rstrip(".")
         async with self._lock:
             if host in self._validated_hosts:
