@@ -257,7 +257,7 @@ async def discover_urls(
     try:
         await guard.validate(sitemap_url)
     except UnsafeUrlError as exc:
-        raise MonitorError("root sitemap URL is not allowed") from exc
+        raise MonitorError(f"root sitemap URL is not allowed: {exc}") from exc
 
     queue: deque[tuple[str, int]] = deque([(sitemap_url, 0)])
     seen_sitemaps: set[str] = set()
