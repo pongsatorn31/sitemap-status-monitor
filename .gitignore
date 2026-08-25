@@ -8,5 +8,6 @@ htmlcov/
 .state/
 .test-tmp*/
 pytest-cache-files-*/
+.tools/
 *.py[cod]
 *.egg-info/
