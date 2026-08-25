@@ -1,9 +1,9 @@
 name: Sitemap status check
 
-on:
+"on":
   schedule:
     - cron: "17 1,5,9,13,17,21 * * *"
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -57,4 +57,3 @@ jobs:
         with:
           path: .state
           key: status-state-${{ github.run_id }}
-
